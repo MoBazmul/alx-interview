@@ -1,29 +1,39 @@
 #!/usr/bin/python3
+"""
+Log parsing
+"""
 
 import sys
-import re
-from collections import defaultdict
 
-def process_line(line, stats):
-    """Process each line and update the statistics."""
-    log_pattern = re.compile(
-        r'^(\d+\.\d+\.\d+\.\d+) - \[(.*?)\] "GET /projects/260 HTTP/1\.1" (\d+) (\d+)$'
-    )
-    match = log_pattern.match(line)
-    
-    if match:
-        status_code = match.group(3)
-        file_size = int(match.group(4))
-        
-        stats['total_size'] += file_size
-        
-        if status_code in stats['status_codes']:
-            stats['status_codes'][status_code] += 1
-        else:
-            stats['status_codes'][status_code] = 1
+if __name__ == '__main__':
 
-def print_stats(stats):
-    """Print the accumulated statistics."""
-    print(f"File size: {stats['total_size']}")
-    for code in sorted(stats['status_codes']):
-        print(f"{code}: {stats['status_codes'][code]}")
+    filesize, count = 0, 0
+    codes = ["200", "301", "400", "401", "403", "404", "405", "500"]
+    stats = {k: 0 for k in codes}
+
+    def print_stats(stats: dict, file_size: int) -> None:
+        print("File size: {:d}".format(filesize))
+        for k, v in sorted(stats.items()):
+            if v:
+                print("{}: {}".format(k, v))
+
+    try:
+        for line in sys.stdin:
+            count += 1
+            data = line.split()
+            try:
+                status_code = data[-2]
+                if status_code in stats:
+                    stats[status_code] += 1
+            except BaseException:
+                pass
+            try:
+                filesize += int(data[-1])
+            except BaseException:
+                pass
+            if count % 10 == 0:
+                print_stats(stats, filesize)
+        print_stats(stats, filesize)
+    except KeyboardInterrupt:
+        print_stats(stats, filesize)
+        raise
