@@ -1,57 +1,29 @@
 #!/usr/bin/python3
-"""
-Read stdin line by line and computes metrics
-Input format: <IP Address> - [<date>] "GET /projects/260 HTTP/1.1"
-<status code> <file size>, skip line if not this format
-After every 10minutes or keyboard interrupt (CTRL + C)
-print these from beginning: number of lines by status code
-possible status codes: 200, 301, 400, 401, 404, 405, and 500
-if status code isn't an integer, do not print it
-format: <status code>: <number>
-Status code must be printed in ascending order
-"""
+
 import sys
+import re
+from collections import defaultdict
 
+def process_line(line, stats):
+    """Process each line and update the statistics."""
+    log_pattern = re.compile(
+        r'^(\d+\.\d+\.\d+\.\d+) - \[(.*?)\] "GET /projects/260 HTTP/1\.1" (\d+) (\d+)$'
+    )
+    match = log_pattern.match(line)
+    
+    if match:
+        status_code = match.group(3)
+        file_size = int(match.group(4))
+        
+        stats['total_size'] += file_size
+        
+        if status_code in stats['status_codes']:
+            stats['status_codes'][status_code] += 1
+        else:
+            stats['status_codes'][status_code] = 1
 
-def print_msg(codes, file_size):
-    print("File size: {}".format(file_size))
-    for key, val in sorted(codes.items()):
-        if val != 0:
-            print("{}: {}".format(key, val))
-
-
-file_size = 0
-code = 0
-count_lines = 0
-codes = {
-    "200": 0,
-    "301": 0,
-    "400": 0,
-    "401": 0,
-    "403": 0,
-    "404": 0,
-    "405": 0,
-    "500": 0
-}
-
-try:
-    for line in sys.stdin:
-        parsed_line = line.split()
-        parsed_line = parsed_line[::-1]
-
-        if len(parsed_line) > 2:
-            count_lines += 1
-
-            if count_lines <= 10:
-                file_size += int(parsed_line[0])
-                code = parsed_line[1]
-
-                if (code in codes.keys()):
-                    codes[code] += 1
-
-            if (count_lines == 10):
-                print_msg(codes, file_size)
-                count_lines = 0
-
-finally:
-    print_msg(codes, file_size)
+def print_stats(stats):
+    """Print the accumulated statistics."""
+    print(f"File size: {stats['total_size']}")
+    for code in sorted(stats['status_codes']):
+        print(f"{code}: {stats['status_codes'][code]}")
