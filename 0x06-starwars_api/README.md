@@ -1,14 +1,14 @@
-# Star Wars API
+# 0x0F. Star Wars API
 
-This project contains interview coding challenges.
+## Resources:books:
+Read or watch:
 
-```bash
-touch 0-starwars_characters.js
-chmod +x 0-starwars_characters.js
+---
+## Learning Objectives:bulb:
+What you should learn from this project:
 
-# Lint.
-pycodestyle 0-starwars_characters.js
+---
+---
 
-# tests.
-./0-generator.py | ./0-stats.py 
-``
+## Author
+* **Tim McMacken** - [TMcMac](https://github.com/TMcMac)
